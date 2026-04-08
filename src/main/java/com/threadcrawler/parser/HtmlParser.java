@@ -15,7 +15,7 @@ public class HtmlParser {
 		List<String> links = new ArrayList<>();
 
 		// Connect to the URL and fetch the HTML
-		Document document = Jsoup.connect(url).get();
+		Document document = Jsoup.connect(url).userAgent("Mozilla/5.0").timeout(10_000).get();
 
 		// Select all anchor tags with href attribute
 		Elements anchorTags = document.select("a[href]");

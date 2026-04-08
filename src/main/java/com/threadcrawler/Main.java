@@ -8,7 +8,7 @@ import com.threadcrawler.parser.HtmlParser;
 public class Main {
 
 	public static void main(String[] args) {
-		String url = "https://example.com";
+		String url = "https://news.ycombinator.com";
 
 		HtmlParser parser = new HtmlParser();
 
