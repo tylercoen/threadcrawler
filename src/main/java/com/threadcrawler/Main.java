@@ -1,27 +1,18 @@
 package com.threadcrawler;
 
-import java.io.IOException;
-import java.util.List;
-
+import com.threadcrawler.core.CrawlManager;
 import com.threadcrawler.parser.HtmlParser;
 
 public class Main {
 
 	public static void main(String[] args) {
-		String url = "https://news.ycombinator.com";
+		String startUrl = "https://news.ycombinator.com";
+		int maxPages = 10;
 
 		HtmlParser parser = new HtmlParser();
 
-		try {
-			List<String> links = parser.extractLinks(url);
+		CrawlManager manager = new CrawlManager();
+		manager.startCrawl(startUrl, maxPages);
 
-			System.out.println("Links found on: " + url);
-			for (String link : links) {
-				System.out.println(link);
-			}
-
-		} catch (IOException e) {
-			System.err.println("Error fetching URL: " + e.getMessage());
-		}
 	}
 }
