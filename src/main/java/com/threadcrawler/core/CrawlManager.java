@@ -1,46 +1,58 @@
 package com.threadcrawler.core;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.threadcrawler.model.UrlNode;
-import com.threadcrawler.parser.HtmlParser;
+import com.threadcrawler.worker.CrawlTask;
 
 public class CrawlManager {
 
-	private Queue<UrlNode> urlQueue = new LinkedList<>();
-	private Set<String> visitedUrls = new HashSet<>();
-	private HtmlParser parser = new HtmlParser();
+	private Set<String> visitedUrls = ConcurrentHashMap.newKeySet();
+	private ExecutorService executor;
+	private java.util.concurrent.atomic.AtomicInteger activeTasks = new java.util.concurrent.atomic.AtomicInteger(0);
 
 	public void startCrawl(String startUrl, int maxPages, int maxDepth) {
-		urlQueue.add(new UrlNode(startUrl, 0));
+		executor = Executors.newVirtualThreadPerTaskExecutor();
 
-		while (!urlQueue.isEmpty() && visitedUrls.size() < maxPages) {
-			UrlNode currentNode = urlQueue.poll();
-			String currentUrl = currentNode.getUrl();
-			int currentDepth = currentNode.getDepth();
+		activeTasks.incrementAndGet();
 
-			if (visitedUrls.contains(currentUrl) || currentDepth > maxDepth) {
-				continue;
-			}
-			System.out.println("Crawling (Depth " + currentDepth + "): " + currentUrl);
-			visitedUrls.add(currentUrl);
+		// Submit initial task
 
+		executor.submit(new CrawlTask(new UrlNode(startUrl, 0), this, maxPages, maxDepth));
+
+		while (activeTasks.get() > 0) {
 			try {
-				List<String> links = parser.extractLinks(currentUrl);
-
-				for (String link : links) {
-					urlQueue.add(new UrlNode(link, currentDepth + 1));
-				}
-			} catch (IOException e) {
-				System.err.println("Failed to crawl: " + currentUrl);
+				Thread.sleep(50);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
 			}
 		}
 
+		executor.shutdown();
+
 		System.out.println("Crawl complete. Pages visited: " + visitedUrls.size());
+	}
+
+	public boolean shouldVisit(String url, int depth, int maxPages, int maxDepth) {
+		return !visitedUrls.contains(url) && visitedUrls.size() < maxPages && depth <= maxDepth;
+	}
+
+	public void markVisited(String url) {
+		visitedUrls.add(url);
+	}
+
+	public void submitTask(CrawlTask task) {
+		executor.submit(task);
+	}
+
+	public void incrementTasks() {
+		activeTasks.incrementAndGet();
+	}
+
+	public void decrementTasks() {
+		activeTasks.decrementAndGet();
 	}
 }
