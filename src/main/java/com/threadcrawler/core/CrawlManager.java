@@ -13,9 +13,11 @@ public class CrawlManager {
 	private Set<String> visitedUrls = ConcurrentHashMap.newKeySet();
 	private ExecutorService executor;
 	private java.util.concurrent.atomic.AtomicInteger activeTasks = new java.util.concurrent.atomic.AtomicInteger(0);
+	private String baseDomain;
 
 	public void startCrawl(String startUrl, int maxPages, int maxDepth) {
 		executor = Executors.newVirtualThreadPerTaskExecutor();
+		this.baseDomain = extractDomain(startUrl);
 
 		activeTasks.incrementAndGet();
 
@@ -54,5 +56,24 @@ public class CrawlManager {
 
 	public void decrementTasks() {
 		activeTasks.decrementAndGet();
+	}
+
+	private String extractDomain(String url) {
+		try {
+			java.net.URI uri = new java.net.URI(url);
+			return uri.getHost();
+		} catch (Exception e) {
+			return "";
+		}
+	}
+
+	public boolean isSameDomain(String url) {
+		try {
+			java.net.URI uri = new java.net.URI(url);
+			String host = uri.getHost();
+			return host != null && host.equals(baseDomain);
+		} catch (Exception e) {
+			return false;
+		}
 	}
 }

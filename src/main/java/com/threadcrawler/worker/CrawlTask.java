@@ -39,6 +39,10 @@ public class CrawlTask implements Runnable {
 			List<String> links = parser.extractLinks(url);
 
 			for (String link : links) {
+
+				if (!manager.isSameDomain(link)) {
+					continue;
+				}
 				manager.incrementTasks();
 
 				manager.submitTask(new CrawlTask(new UrlNode(link, depth + 1), manager, maxPages, maxDepth));
