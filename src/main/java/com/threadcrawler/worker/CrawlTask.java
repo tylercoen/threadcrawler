@@ -24,6 +24,7 @@ public class CrawlTask implements Runnable {
 
 	@Override
 	public void run() {
+		System.out.println("Task started for depth " + node.getDepth() + ": " + node.getUrl());
 		try {
 			String url = node.getUrl();
 			int depth = node.getDepth();
@@ -32,22 +33,30 @@ public class CrawlTask implements Runnable {
 				return;
 			}
 
-			manager.markVisited(url);
+			if (!manager.markVisited(url)) {
+				return;
+			}
 
 			System.out.println(Thread.currentThread() + " crawling (Depth " + depth + "): " + url);
 
-			manager.applyRateLimit();
+			manager.acquirePermit();
 
-			List<String> links = parser.extractLinks(url);
+			try {
+				List<String> links = parser.extractLinks(url);
 
-			for (String link : links) {
+				System.out.println("Links found on " + url + ": " + links.size());
 
-				if (!manager.isSameDomain(link)) {
-					continue;
+				for (String link : links) {
+
+					if (!manager.isSameDomain(link)) {
+						continue;
+					}
+					manager.incrementTasks();
+
+					manager.submitTask(new CrawlTask(new UrlNode(link, depth + 1), manager, maxPages, maxDepth));
 				}
-				manager.incrementTasks();
-
-				manager.submitTask(new CrawlTask(new UrlNode(link, depth + 1), manager, maxPages, maxDepth));
+			} finally {
+				manager.releasePermit();
 			}
 		} catch (IOException e) {
 			System.err.println("Failed: " + node.getUrl());

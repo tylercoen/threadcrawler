@@ -4,6 +4,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 
 import com.threadcrawler.model.UrlNode;
 import com.threadcrawler.worker.CrawlTask;
@@ -15,6 +16,7 @@ public class CrawlManager {
 	private java.util.concurrent.atomic.AtomicInteger activeTasks = new java.util.concurrent.atomic.AtomicInteger(0);
 	private String baseDomain;
 	private long crawlDelayMs = 200;
+	private Semaphore rateLimiter = new Semaphore(5);
 
 	public void startCrawl(String startUrl, int maxPages, int maxDepth) {
 		executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -40,11 +42,17 @@ public class CrawlManager {
 	}
 
 	public boolean shouldVisit(String url, int depth, int maxPages, int maxDepth) {
-		return !visitedUrls.contains(url) && visitedUrls.size() < maxPages && depth <= maxDepth;
+		if (visitedUrls.contains(url))
+			return false;
+		if (depth > maxDepth)
+			return false;
+
+		return visitedUrls.size() < maxPages + 50;
+
 	}
 
-	public void markVisited(String url) {
-		visitedUrls.add(url);
+	public boolean markVisited(String url) {
+		return visitedUrls.add(url);
 	}
 
 	public void submitTask(CrawlTask task) {
@@ -78,11 +86,15 @@ public class CrawlManager {
 		}
 	}
 
-	public void applyRateLimit() {
+	public void acquirePermit() {
 		try {
-			Thread.sleep(crawlDelayMs);
+			rateLimiter.acquire();
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}
+	}
+
+	public void releasePermit() {
+		rateLimiter.release();
 	}
 }
