@@ -14,6 +14,7 @@ public class CrawlManager {
 	private ExecutorService executor;
 	private java.util.concurrent.atomic.AtomicInteger activeTasks = new java.util.concurrent.atomic.AtomicInteger(0);
 	private String baseDomain;
+	private long crawlDelayMs = 200;
 
 	public void startCrawl(String startUrl, int maxPages, int maxDepth) {
 		executor = Executors.newVirtualThreadPerTaskExecutor();
@@ -74,6 +75,14 @@ public class CrawlManager {
 			return host != null && host.equals(baseDomain);
 		} catch (Exception e) {
 			return false;
+		}
+	}
+
+	public void applyRateLimit() {
+		try {
+			Thread.sleep(crawlDelayMs);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 		}
 	}
 }

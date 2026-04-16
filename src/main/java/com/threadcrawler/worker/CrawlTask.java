@@ -36,6 +36,8 @@ public class CrawlTask implements Runnable {
 
 			System.out.println(Thread.currentThread() + " crawling (Depth " + depth + "): " + url);
 
+			manager.applyRateLimit();
+
 			List<String> links = parser.extractLinks(url);
 
 			for (String link : links) {
