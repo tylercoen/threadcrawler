@@ -15,7 +15,6 @@ public class CrawlManager {
 	private ExecutorService executor;
 	private java.util.concurrent.atomic.AtomicInteger activeTasks = new java.util.concurrent.atomic.AtomicInteger(0);
 	private String baseDomain;
-	private long crawlDelayMs = 200;
 	private Semaphore rateLimiter = new Semaphore(5);
 
 	public void startCrawl(String startUrl, int maxPages, int maxDepth) {

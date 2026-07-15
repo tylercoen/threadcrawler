@@ -6,6 +6,7 @@ import java.util.List;
 import com.threadcrawler.core.CrawlManager;
 import com.threadcrawler.model.UrlNode;
 import com.threadcrawler.parser.HtmlParser;
+import com.threadcrawler.util.UrlUtils;
 
 public class CrawlTask implements Runnable {
 	private UrlNode node;
@@ -24,9 +25,14 @@ public class CrawlTask implements Runnable {
 
 	@Override
 	public void run() {
-		System.out.println("Task started for depth " + node.getDepth() + ": " + node.getUrl());
+
 		try {
-			String url = node.getUrl();
+			String url = UrlUtils.normalize(node.getUrl());
+
+			if (url == null) {
+				return;
+			}
+
 			int depth = node.getDepth();
 
 			if (!manager.shouldVisit(url, depth, maxPages, maxDepth)) {
@@ -34,10 +40,11 @@ public class CrawlTask implements Runnable {
 			}
 
 			if (!manager.markVisited(url)) {
+				System.out.println("[SKIPPED] Already visited: " + url);
 				return;
 			}
 
-			System.out.println(Thread.currentThread() + " crawling (Depth " + depth + "): " + url);
+			System.out.println("[CRAWLING] Depth " + depth + " -> " + url);
 
 			manager.acquirePermit();
 
@@ -47,10 +54,16 @@ public class CrawlTask implements Runnable {
 				System.out.println("Links found on " + url + ": " + links.size());
 
 				for (String link : links) {
+					link = UrlUtils.normalize(link);
+
+					if (link == null) {
+						continue;
+					}
 
 					if (!manager.isSameDomain(link)) {
 						continue;
 					}
+
 					manager.incrementTasks();
 
 					manager.submitTask(new CrawlTask(new UrlNode(link, depth + 1), manager, maxPages, maxDepth));
