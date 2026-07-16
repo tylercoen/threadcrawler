@@ -56,7 +56,7 @@ public class CrawlTask implements Runnable {
 				for (String link : links) {
 					link = UrlUtils.normalize(link);
 
-					if (link == null) {
+					if (!UrlUtils.isCrawlable(link)) {
 						continue;
 					}
 

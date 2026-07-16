@@ -32,7 +32,11 @@ public final class UrlUtils {
 
 			String path = uri.getPath();
 
-			if (path == null || path.isEmpty()) {
+			if (path == null) {
+				path = "";
+			}
+
+			if (path.endsWith("/") && path.length() > 1) {
 				path = path.substring(0, path.length() - 1);
 			}
 
@@ -42,6 +46,38 @@ public final class UrlUtils {
 		} catch (URISyntaxException e) {
 			return null;
 		}
+	}
+
+	public static boolean isCrawlable(String url) {
+		if (url == null) {
+			return false;
+		}
+
+		String lower = url.toLowerCase();
+
+		// Skip non-html resources
+		if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png") || lower.endsWith(".gif")
+				|| lower.endsWith(".svg") || lower.endsWith(".ico") || lower.endsWith(".pdf") || lower.endsWith(".zip")
+				|| lower.endsWith(".css") || lower.endsWith(".js")) {
+			return false;
+		}
+
+		if (lower.contains("/special:")) {
+			return false;
+		}
+
+		if (lower.contains("/talk:")) {
+			return false;
+		}
+
+		if (lower.contains("action=edit")) {
+			return false;
+		}
+
+		if (lower.contains("action=history")) {
+			return false;
+		}
+		return true;
 	}
 
 }
