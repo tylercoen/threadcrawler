@@ -39,6 +39,11 @@ public class CrawlTask implements Runnable {
 				return;
 			}
 
+			if (!manager.isAllowed(url)) {
+				System.out.println("[ROBOTS BLOCKED] " + url);
+				return;
+			}
+
 			if (!manager.markVisited(url)) {
 				System.out.println("[SKIPPED] Already visited: " + url);
 				return;

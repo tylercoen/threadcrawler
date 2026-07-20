@@ -7,14 +7,14 @@ import com.threadcrawler.parser.HtmlParser;
 public class Main {
 
 	public static void main(String[] args) {
-		String startUrl = "https://en.wikipedia.org/wiki/Web_crawler";
+		String startUrl = "https://news.ycombinator.com/";
 		int maxPages = 100;
 		int maxDepth = 3;
 
 		RobotsManager robots = new RobotsManager();
 
-		robots.loadRobots("cnn.com");
-		System.out.println(robots.getRules("cnn.com"));
+		// System.out.println(robots.isAllowed("https://cnn.com/search?q=test"));
+		// System.out.println(robots.isAllowed("https://cnn.com/news"));
 
 		HtmlParser parser = new HtmlParser();
 

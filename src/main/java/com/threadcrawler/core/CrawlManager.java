@@ -16,10 +16,22 @@ public class CrawlManager {
 	private java.util.concurrent.atomic.AtomicInteger activeTasks = new java.util.concurrent.atomic.AtomicInteger(0);
 	private String baseDomain;
 	private Semaphore rateLimiter = new Semaphore(5);
+	private RobotsManager robotsManager = new RobotsManager();
+
+	public boolean isAllowed(String url) {
+		return robotsManager.isAllowed(url);
+	}
 
 	public void startCrawl(String startUrl, int maxPages, int maxDepth) {
 		executor = Executors.newVirtualThreadPerTaskExecutor();
 		this.baseDomain = extractDomain(startUrl);
+		if (baseDomain == null) {
+			System.out.println("Invalid start URL (add https://): " + startUrl);
+			return;
+		}
+		// System.out.println("Start URL: " + startUrl);
+		// System.out.println("Base domain: " + baseDomain);
+		robotsManager.loadRobots(baseDomain);
 
 		activeTasks.incrementAndGet();
 
